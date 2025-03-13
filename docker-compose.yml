@@ -1,14 +1,27 @@
 version: '3.8'
-    services:
-      fastapi:
-        build: .
-        ports:
-          - "8080:8080"
-        depends_on:
-          - langserve
-      langserve:
-        build:
-          context: ./app
-          dockerfile: Dockerfile
-        ports:
-          - "8000:8000"
+
+services:
+  fastapi:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - langserve
+    environment:
+      LANGSERVE_ENDPOINT: "http://langserve:8000"  # 讓 fastapi 連接 langserve
+    networks:
+      - mynet
+
+  langserve:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - mynet
+
+networks:
+  mynet:
+    driver: bridge
+

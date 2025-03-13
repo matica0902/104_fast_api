@@ -1,11 +1,13 @@
 from fastapi import FastAPI, UploadFile, File, Query
 import requests
+import os
 from pydantic import BaseModel
 from typing import List
 
 app = FastAPI()
 
-LANGSERVE_URL = "http://127.0.0.1:8000"
+# 從環境變數讀取 LangServe 服務的 URL，若未設定則使用預設值
+LANGSERVE_URL = os.getenv("LANGSERVE_ENDPOINT", "http://127.0.0.1:8000")
 
 class JobResult(BaseModel):
     title: str
@@ -34,3 +36,4 @@ async def process_search_104_query(keyword: str = Query(...), end_page: int = Qu
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8080)
+
