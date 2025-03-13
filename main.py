@@ -30,7 +30,14 @@ async def process_vectorstore_query(query: str):
 @app.get("/search_104")
 async def process_search_104_query(keyword: str = Query(...), end_page: int = Query(...)):
     params = {"keyword": keyword, "end_page": end_page}
-    response = requests.get(f"{LANGSERVE_URL}/search_104/", params=params)
+    test_url = f"{LANGSERVE_URL}/search_104/"
+    try:
+        test_response = requests.get(test_url)
+        test_response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}
+
+    response = requests.get(test_url, params=params)
     return response.json()
 
 if __name__ == "__main__":
