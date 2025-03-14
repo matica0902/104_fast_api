@@ -8,7 +8,7 @@ services:
     depends_on:
       - langserve
     environment:
-      LANGSERVE_ENDPOINT: "http://langserve:8000"  # 讓 fastapi 連接 langserve
+      LANGSERVE_URL: "http://langserve:8000/langserve"  # 確保 FastAPI 連到 LangServe
     networks:
       - mynet
 
@@ -16,12 +16,9 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
     networks:
       - mynet
 
 networks:
   mynet:
     driver: bridge
-
