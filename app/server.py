@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Query
 from langchain.document_loaders import TextLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import FAISS, Chroma
+from langchain.vectorstores import FAISS
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.llms import OpenAI
 from langserve import add_routes
@@ -11,7 +11,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
-app = FastAPI()
+app = FastAPI()  # 不設定 root_path，避免影響 FastAPI 本身的 API
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -30,10 +30,9 @@ def search_document(query: str, file: UploadFile = File(...)):
     db = FAISS.from_documents(texts, embeddings)
     docs = db.similarity_search(query)
     chain = load_qa_with_sources_chain(OpenAI(temperature=0), chain_type="stuff")
-    answer = chain.run(input_documents=docs, question=query)
-
+    answer = chain.run(input_documents=docs, question=query, return_source_documents=True)
     os.remove(file_path)
-    return answer
+    return {"answer":answer}
 
 def search_vectorstore(query: str):
     """查詢向量資料庫"""
@@ -42,8 +41,8 @@ def search_vectorstore(query: str):
     db = FAISS.from_texts(texts, embeddings)
     docs = db.similarity_search(query)
     chain = load_qa_with_sources_chain(OpenAI(temperature=0), chain_type="stuff")
-    answer = chain.run(input_documents=docs, question=query)
-    return answer
+    answer = chain.run(input_documents=docs, question=query, return_source_documents=True)
+    return {"answer":answer}
 
 def get_job_details(job_url):
     if job_url.startswith('//'):
@@ -141,9 +140,10 @@ def search_104_jobs(keyword: str, end_page: int):
             "data": final_result
         }
 
-add_routes(app, search_document, path="/document")
-add_routes(app, search_vectorstore, path="/vectorstore")
-add_routes(app, search_104_jobs, path="/search_104")
+# 明確在路徑加上 /langserve 前綴
+add_routes(app, search_document, path="/langserve/document")
+add_routes(app, search_vectorstore, path="/langserve/vectorstore")
+add_routes(app, search_104_jobs, path="/langserve/search_104")
 
 if __name__ == "__main__":
     import uvicorn
