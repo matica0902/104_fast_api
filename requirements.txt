@@ -5,6 +5,7 @@ requests==2.31.0
 beautifulsoup4==4.12.3
 openai==1.12.0
 langchain==0.0.354
-langchain-core==0.1.23
-langsmith==0.0.87
+langchain-core>=0.3.34 
+langserve>=0.0.21 
+langsmith==0.0.87 
 python-multipart==0.0.6
