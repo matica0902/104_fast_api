@@ -2,7 +2,7 @@
 整合解決方案 - 直接實現所有功能，不依賴 langserve
 """
 
-from fastapi import FastAPI, UploadFile, File, Query, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -123,17 +123,53 @@ def search_104_jobs_core(keyword: str, end_page: int):
 def simple_document_search(query: str, file_path: str):
     """簡化版的文檔查詢實現，不使用 LangChain"""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
+        # 嘗試使用不同的編碼來讀取文件
+        encodings = ['utf-8', 'latin-1', 'cp950', 'big5']
+        content = None
+        
+        for encoding in encodings:
+            try:
+                with open(file_path, 'r', encoding=encoding) as f:
+                    content = f.read()
+                logger.info(f"成功以 {encoding} 編碼讀取文件")
+                break
+            except UnicodeDecodeError:
+                logger.warning(f"無法以 {encoding} 編碼讀取文件，嘗試下一個編碼")
+        
+        if content is None:
+            # 如果所有編碼都失敗，嘗試二進制讀取
+            with open(file_path, 'rb') as f:
+                content = f.read().decode('utf-8', errors='replace')
+            logger.info("使用二進制讀取並轉換為 UTF-8（替換無效字符）")
         
         # 簡單的關鍵字匹配
         found = query.lower() in content.lower()
+        
+        # 獲取相關上下文
+        if found:
+            # 嘗試找到查詢詞在內容中的位置
+            query_pos = content.lower().find(query.lower())
+            
+            # 獲取查詢詞前後的上下文
+            start_pos = max(0, query_pos - 150)
+            end_pos = min(len(content), query_pos + len(query) + 150)
+            
+            # 提取上下文
+            context = content[start_pos:end_pos]
+            
+            if start_pos > 0:
+                context = "..." + context
+            if end_pos < len(content):
+                context = context + "..."
+        else:
+            # 如果沒找到，只顯示前300個字符
+            context = content[:300] + "..." if len(content) > 300 else content
         
         return {
             "query": query,
             "found": found,
             "answer": f"文檔中{'找到' if found else '未找到'}查詢詞: {query}",
-            "context": content[:300] + "..." if len(content) > 300 else content
+            "context": context
         }
     except Exception as e:
         logger.error(f"處理文檔時出錯: {e}")
@@ -157,7 +193,7 @@ def simple_vectorstore_search(query: str):
     }
 
 @app.post("/document")
-async def process_document_query(query: str, file: UploadFile = File(...)):
+async def process_document_query(query: str = Form(...), file: UploadFile = File(...)):
     """文件查詢API"""
     logger.info(f"處理文件查詢 - 查詢: {query}")
     try:
@@ -231,7 +267,7 @@ async def root():
 
 # 維持與原始 langserve 路徑的兼容性
 @app.post("/langserve/document")
-async def langserve_document_query(query: str, file: UploadFile = File(...)):
+async def langserve_document_query(query: str = Form(...), file: UploadFile = File(...)):
     """LangServe 兼容的文檔查詢端點"""
     return await process_document_query(query, file)
 
@@ -247,3 +283,7 @@ async def langserve_search_104_query(
 ):
     """LangServe 兼容的104搜索端點"""
     return await process_search_104_query(keyword, end_page)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "8000")))
