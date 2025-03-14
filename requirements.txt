@@ -1,20 +1,12 @@
-# 核心依賴項
+# 核心依賴項 - 不再依賴 langserve
 fastapi==0.109.2
 uvicorn==0.27.1
 requests==2.31.0
 python-dotenv==1.0.0
 pydantic==2.4.2
+tenacity==8.2.3
 python-multipart==0.0.6
 beautifulsoup4==4.12.2
-
-# 關鍵版本修復
+# 修復版本兼容性問題
 httpx==0.24.1
-langserve==0.0.30
-openai==0.28.1
-
-# 其他必要組件
-langchain==0.0.335
-faiss-cpu==1.7.4
-tiktoken==0.5.1
-
 
