@@ -1,4 +1,4 @@
-# FastAPI 應用核心依賴項
+# 核心依賴項
 fastapi==0.109.2
 uvicorn==0.27.1
 requests==2.31.0
@@ -7,13 +7,14 @@ pydantic==2.4.2
 python-multipart==0.0.6
 beautifulsoup4==4.12.2
 
-# LangServe 與 AI 相關依賴項
-langchain==0.1.8
-langchain-core==0.1.24
-langchain-community==0.0.21
-langserve==0.0.32
-langsmith==0.1.0
-openai==1.12.0
-tiktoken==0.5.2
+# 關鍵版本修復
+httpx==0.24.1
+langserve==0.0.30
+openai==0.28.1
+
+# 其他必要組件
+langchain==0.0.335
+faiss-cpu==1.7.4
+tiktoken==0.5.1
 
 
