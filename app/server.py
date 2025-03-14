@@ -10,6 +10,18 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import time
+import logging
+
+# 設置日誌
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# 檢查 OpenAI API 密鑰
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    logger.warning("未設置 OPENAI_API_KEY 環境變數，這可能會導致 AI 相關功能失敗")
+else:
+    logger.info("已設置 OPENAI_API_KEY 環境變數")
 
 app = FastAPI()  # 不設定 root_path，避免影響 FastAPI 本身的 API
 
@@ -144,7 +156,3 @@ def search_104_jobs(keyword: str, end_page: int):
 add_routes(app, search_document, path="/langserve/document")
 add_routes(app, search_vectorstore, path="/langserve/vectorstore")
 add_routes(app, search_104_jobs, path="/langserve/search_104")
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
