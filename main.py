@@ -3,12 +3,12 @@ import requests
 import os
 from pydantic import BaseModel
 from typing import List
+from urllib.parse import urljoin
 
 app = FastAPI()
 
 # 從環境變數讀取 LangServe 服務的 URL，若未設定則使用預設值
-# 支持多種可能的環境變數名稱，確保與Railway兼容
-LANGSERVE_URL = os.getenv("LANGSERVE_URL") or os.getenv("LANGSERVE_ENDPOINT") or "http://127.0.0.1:8000"
+LANGSERVE_URL = os.getenv("LANGSERVE_URL", "http://langserve:8000/langserve").rstrip("/")  # 確保沒有多餘 /
 
 # 啟用調試日誌
 import logging
@@ -25,13 +25,13 @@ class JobResult(BaseModel):
 async def process_document_query(query: str, file: UploadFile = File(...)):
     files = {"file": (file.filename, file.file, file.content_type)}
     params = {"query": query}
-    response = requests.post(f"{LANGSERVE_URL}/document/", files=files, params=params)
+    response = requests.post(urljoin(LANGSERVE_URL, "/document"), files=files, params=params)
     return response.json()
 
 @app.get("/vectorstore")
 async def process_vectorstore_query(query: str):
     params = {"input": {"query": query}}
-    response = requests.get(f"{LANGSERVE_URL}/vectorstore/", params=params)
+    response = requests.get(urljoin(LANGSERVE_URL, "/vectorstore"), params=params)
     return response.json()
 
 @app.get("/search_104")
@@ -49,7 +49,7 @@ async def process_search_104_query(
     
     # 建構API參數
     params = {"keyword": keyword, "end_page": end_page}
-    search_url = f"{LANGSERVE_URL}/search_104/"
+    search_url = urljoin(LANGSERVE_URL, "/search_104")
     
     try:
         # 直接執行搜索請求，不再進行測試請求
