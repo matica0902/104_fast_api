@@ -31,11 +31,16 @@ app = FastAPI(
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-class JobResult(BaseModel):
-    title: str
-    company: str
-    link: str
-    description: Optional[str] = None
+# 定義 JobResult 類
+class JobResult:
+    def __init__(self, title, company, link):
+        self.title = title
+        self.company = company
+        self.link = link
+        self.description = ""
+
+    def __repr__(self):
+        return f"JobResult(title={self.title}, company={self.company}, link={self.link}, description={self.description})"
 
 def get_job_details(job_url):
     """抓取工作詳細信息"""
@@ -55,34 +60,15 @@ def get_job_details(job_url):
         response.raise_for_status()
         job_data = response.json()
         return {
-            "description": job_data.get("data", {}).get("jobDetail", {}).get("jobDescription", "")[:200],
-            "requirements": job_data.get("data", {}).get("condition", {}).get("acceptRole", {}).get("description", "")[:200],
+            "description": job_data.get("data", {}).get("jobDetail", {}).get("jobDescription", ""),
+            #"description": job_data['jobDetail']['jobDescription'],
+            "requirements": job_data.get("data", {}).get("condition", {}).get("acceptRole", {}).get("description", ""),
             "raw_data": job_data
         }
     except Exception as e:
         return {"error": str(e)}
 
 def search_104_jobs_core(keyword: str, end_page: int):
-    """搜索104網站上的工作，實際的爬蟲邏輯"""
-    final_result = []
-    base_url = "https://www.104.com.tw/jobs/search/list"
-
-    params_template = {
-        "ro": 0,
-        "kwop": 7,
-        "keyword": keyword,
-        "order": 1,
-        "page": 1
-    }
-
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Referer": "https://www.104.com.tw/"
-    }
-
-    try:
-        for current_page in range(1, end_page + 1):
-            logger.info(f"正在抓def search_104_jobs_core(keyword: str, end_page: int):
     """搜索104網站上的工作，實際的爬蟲邏輯"""
     final_result = []
     base_url = "https://www.104.com.tw/jobs/search/list"
