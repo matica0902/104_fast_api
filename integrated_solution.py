@@ -82,6 +82,26 @@ def search_104_jobs_core(keyword: str, end_page: int):
 
     try:
         for current_page in range(1, end_page + 1):
+            logger.info(f"正在抓def search_104_jobs_core(keyword: str, end_page: int):
+    """搜索104網站上的工作，實際的爬蟲邏輯"""
+    final_result = []
+    base_url = "https://www.104.com.tw/jobs/search/list"
+
+    params_template = {
+        "ro": 0,
+        "kwop": 7,
+        "keyword": keyword,
+        "order": 1,
+        "page": 1
+    }
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": "https://www.104.com.tw/"
+    }
+
+    try:
+        for current_page in range(1, end_page + 1):
             logger.info(f"正在抓取第 {current_page} 頁")
 
             params = params_template.copy()
@@ -92,32 +112,33 @@ def search_104_jobs_core(keyword: str, end_page: int):
             data = response.json()
 
             jobs_in_page = data.get("data", {}).get("list", [])
-            
+            ####job_list = data.get("data", {}).get("list", [])
             for job in jobs_in_page:
                 job_name = job.get("jobName", "無標題")
-                company_name = job.get("companyName", "未知公司")
-                job_link = f"https://www.104.com.tw/job/{job.get('jobNo')}"
-                
+                company_name = job.get("custName", "未知公司")
+                #job_link = f"https://www.104.com.tw/job/{job.get('jobNo')}"
+                job_link = job.get("link", {}).get("job", "")
+                ##job_url = job['link']['job']
                 job_result = JobResult(
                     title=job_name,
                     company=company_name,
                     link=job_link
                 )
-                
+
                 # 獲取詳細信息
                 details = get_job_details(job_link)
                 if details and "error" not in details:
                     job_result.description = details.get("description", "")
-                
+
                 final_result.append(job_result)
-            
+
             # 防止請求過於頻繁
             if current_page < end_page:
                 time.sleep(1)
-                
+
     except Exception as e:
         logger.error(f"搜索過程中出錯: {e}")
-    
+
     return final_result
 
 def simple_document_search(query: str, file_path: str):
